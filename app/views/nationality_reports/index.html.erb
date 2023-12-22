@@ -1,0 +1,14 @@
+<p style="color: green"><%= notice %></p>
+
+<h1>Nationality reports</h1>
+
+<div id="nationality_reports">
+  <% @nationality_reports.each do |nationality_report| %>
+    <%= render nationality_report %>
+    <p>
+      <%= link_to "Show this nationality report", nationality_report %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New nationality report", new_nationality_report_path %>

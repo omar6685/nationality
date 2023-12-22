@@ -1,0 +1,2 @@
+class NationalityReport < ApplicationRecord
+end

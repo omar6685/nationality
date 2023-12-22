@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @nationality_report %>
+
+<div>
+  <%= link_to "Edit this nationality report", edit_nationality_report_path(@nationality_report) %> |
+  <%= link_to "Back to nationality reports", nationality_reports_path %>
+
+  <%= button_to "Destroy this nationality report", @nationality_report, method: :delete %>
+</div>
