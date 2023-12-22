@@ -9,6 +9,43 @@ class NationalityReportsController < ApplicationController
   # GET /nationality_reports/1 or /nationality_reports/1.json
   def show
   end
+  def generate_report
+    file = params[:file]
+  
+    if file.present? && file.content_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      workbook = Roo::Spreadsheet.open(file.path, headers: true)
+      worksheet = workbook.sheet(0)
+  
+      nationality_counts = Hash.new(0)
+      header_row = worksheet.first # Get the header row
+  
+      # Assuming 'الجنسية' (Nationality) is the header
+      nationality_column_index = header_row.index('الجنسية')
+  
+      if nationality_column_index.present?
+        worksheet.each do |row|
+          # Skip the header row
+          next if row == header_row
+  
+          nationality = row[nationality_column_index]
+          nationality_counts[nationality] += 1 if nationality
+          # Add other processing based on your data structure
+        end
+  
+        if nationality_counts.present?
+          result_hash = nationality_counts.map { |nationality, count| "#{nationality}:#{count}" }.join(',')
+          NationalityReport.create(result: result_hash)
+          redirect_to root_path, notice: 'Nationality report generated successfully!'
+        else
+          redirect_to root_path, alert: 'No data found in the Excel file.'
+        end
+      else
+        redirect_to root_path, alert: 'Header row not found in the Excel file.'
+      end
+    else
+      redirect_to root_path, alert: 'Please upload a valid Excel file.'
+    end
+  end
 
   # GET /nationality_reports/new
   def new

@@ -4,7 +4,7 @@
 
 <div id="nationality_reports">
   <% @nationality_reports.each do |nationality_report| %>
-    <%= render nationality_report %>
+    <%= link_to nationality_report.id, nationality_report %>
     <p>
       <%= link_to "Show this nationality report", nationality_report %>
     </p>

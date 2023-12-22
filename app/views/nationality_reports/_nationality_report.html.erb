@@ -1,7 +1,16 @@
-<div id="<%= dom_id nationality_report %>">
-  <p>
-    <strong>Result:</strong>
-    <%= nationality_report.result %>
-  </p>
-
-</div>
+<table>
+<thead>
+  <tr>
+    <th>Nationality</th>
+    <th>Count</th>
+  </tr>
+</thead>
+<tbody>
+  <% @nationality_report.parsed_result.each do |nationality, count| %>
+    <tr>
+      <td><%= nationality %></td>
+      <td><%= count %></td>
+    </tr>
+  <% end %>
+</tbody>
+</table>
