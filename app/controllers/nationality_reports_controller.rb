@@ -11,29 +11,38 @@ class NationalityReportsController < ApplicationController
   end
   def generate_report
     file = params[:file]
-  
+    
     if file.present? && file.content_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       workbook = Roo::Spreadsheet.open(file.path, headers: true)
       worksheet = workbook.sheet(0)
-  
+    
       nationality_counts = Hash.new(0)
       header_row = worksheet.first # Get the header row
-  
+    
       # Assuming 'الجنسية' (Nationality) is the header
       nationality_column_index = header_row.index('الجنسية')
-  
+    
       if nationality_column_index.present?
+        total_non_saudi_employees = 0
+    
         worksheet.each do |row|
           # Skip the header row
           next if row == header_row
-  
+    
           nationality = row[nationality_column_index]
-          nationality_counts[nationality] += 1 if nationality
+          if nationality != 'سعودي' # Exclude Saudis
+            nationality_counts[nationality] += 1
+            total_non_saudi_employees += 1
+          end
           # Add other processing based on your data structure
         end
-  
+    
         if nationality_counts.present?
-          result_hash = nationality_counts.map { |nationality, count| "#{nationality}:#{count}" }.join(',')
+          result_hash = nationality_counts.map do |nationality, count|
+            percentage = ((count.to_f / total_non_saudi_employees) * 100).round(2)
+            "#{nationality}:#{count}:#{percentage}%"
+          end.join(',')
+          
           NationalityReport.create(result: result_hash)
           redirect_to root_path, notice: 'Nationality report generated successfully!'
         else
@@ -46,6 +55,7 @@ class NationalityReportsController < ApplicationController
       redirect_to root_path, alert: 'Please upload a valid Excel file.'
     end
   end
+
 
   # GET /nationality_reports/new
   def new

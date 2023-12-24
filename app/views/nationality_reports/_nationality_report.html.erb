@@ -1,16 +1,20 @@
 <table>
-<thead>
-  <tr>
-    <th>Nationality</th>
-    <th>Count</th>
-  </tr>
-</thead>
-<tbody>
-  <% @nationality_report.parsed_result.each do |nationality, count| %>
+  <thead>
     <tr>
-      <td><%= nationality %></td>
-      <td><%= count %></td>
+      <th>Nationality</th>
+      <th>Count</th>
+      <th>Percentage</th>
+      <th>Allowed Percentage</th>
     </tr>
-  <% end %>
-</tbody>
+  </thead>
+  <tbody>
+    <% @nationality_report.parsed_result.each do |nationality, data| %>
+      <tr>
+        <td><%= nationality %></td>
+        <td><%= data[:count] %></td>
+        <td><%= data[:percentage] %></td>
+        <td><%= data[:allowed_percentage] %></td>
+      </tr>
+    <% end %>
+  </tbody>
 </table>
