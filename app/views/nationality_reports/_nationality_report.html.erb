@@ -1,3 +1,9 @@
+<%= @nationality_report.name %>
+<br>
+ اجمالي عدد السعوديين خارج الحسبة:<%= @nationality_report.saudis %>
+<!-- nationality_reports/show.html.erb -->
+
+<h2>Nationality Report</h2>
 <table>
   <thead>
     <tr>
@@ -8,12 +14,34 @@
     </tr>
   </thead>
   <tbody>
-    <% @nationality_report.parsed_result.each do |nationality, data| %>
+    <% @nationality_report.parsed_result.sort_by { |_, data| -data[:count] }.each do |nationality, data| %>
       <tr>
         <td><%= nationality %></td>
         <td><%= data[:count] %></td>
         <td><%= data[:percentage] %></td>
         <td><%= data[:allowed_percentage] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+  المجموع بعد زيادة التأشيرات: <%= @nationality_report.total_employees %>
+<br>
+<!-- nationality_reports/show.html.erb -->
+
+<h2>Max Additions</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Nationality</th>
+      <th>Max Addition</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @nationality_report.parsed_max_addition.sort_by { |_, max_addition| max_addition }.each do |nationality, max_addition| %>
+      <tr>
+        <td><%= nationality %></td>
+        <td><%= max_addition %></td>
       </tr>
     <% end %>
   </tbody>

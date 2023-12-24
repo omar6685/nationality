@@ -14,6 +14,31 @@ class NationalityReport < ApplicationRecord
       end
     end
   
+    def calculate_max_addition(nationality_counts)
+        max_additions = {}
+        nationality_counts.each do |nationality, count|
+          inc = 0
+          allowed_percentage = calculate_allowed_percentage(nationality)
+          actual_percentage = (count.to_f / total_employees) * 100
+    
+          while true
+            inc += 1
+            actual_percentage = ((count + inc).to_f / (total_employees + inc)) * 100
+            break if actual_percentage > allowed_percentage
+          end
+    
+          max_addition = [0, inc - 1].max
+          max_additions[nationality] = max_addition
+        end
+        max_additions
+      end
+
+      def parsed_max_addition
+        return {} if max_addition.blank?
+    
+        JSON.parse(max_addition)
+      end
+      
     private
   
     def calculate_allowed_percentage(nationality)
