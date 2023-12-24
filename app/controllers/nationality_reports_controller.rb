@@ -8,73 +8,81 @@ class NationalityReportsController < ApplicationController
 
   # GET /nationality_reports/1 or /nationality_reports/1.json
   def show
+    @file_names = JSON.parse(@nationality_report.name)
   end
   # In the controller's generate_report action
   def generate_report
-    file = params[:file]
+    files = params.permit!.select { |param_name, _value| param_name.starts_with?('file') }
   
-    if file.present? && file.content_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      workbook = Roo::Spreadsheet.open(file.path, headers: true)
-      worksheet = workbook.sheet(0)
+    if files.present? && files.values.all? { |file| file.content_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      merged_counts = Hash.new(0)
+      total_non_saudi_employees = 0
+      saudi_employees_count = 0
+      file_names = {}
   
-      nationality_counts = Hash.new(0)
-      header_row = worksheet.first # Get the header row
+
+      files.keys.each_with_index do |param_name, index|
+        file = files[param_name]
+        name = file.original_filename.split('.').first
+        workbook = Roo::Spreadsheet.open(file.tempfile.path, headers: true)
+        worksheet = workbook.sheet(0)
   
-      # Assuming 'الجنسية' (Nationality) is the header
-      nationality_column_index = header_row.index('الجنسية')
-      # Get the company name from the 5th column in the 2nd row
-      company_name_column_index = 4 # Assuming the company name is in the 5th column (index 4)
-      name = worksheet.row(2)[company_name_column_index]
+        nationality_counts = Hash.new(0)
+        header_row = worksheet.first # Get the header row
   
-      if nationality_column_index.present? && company_name_column_index.present?
-        total_non_saudi_employees = 0
-        saudi_employees_count = 0 # To store Saudi employees count
+        nationality_column_index = header_row.index('الجنسية')
+        company_name_column_index = 4 # Assuming the company name is in the 5th column (index 4)
+        company_name = worksheet.row(2)[company_name_column_index] # Get the company name
+        file_names[(index + 1).to_s] = company_name # Store the filename and company name in the hash
   
-        worksheet.each do |row|
-          # Skip the header row
-          next if row == header_row
+        if nationality_column_index.present? && company_name_column_index.present?
+          worksheet.each do |row|
+            next if row == header_row
   
-          nationality = row[nationality_column_index]
-          name = row[company_name_column_index] # Get the company name from the 5th column
+            nationality = row[nationality_column_index]
+            name = row[company_name_column_index]
   
-          if nationality == 'سعودي'
-            saudi_employees_count += 1
-          else
-            nationality_counts[nationality] ||= 0
-            nationality_counts[nationality] += 1
-            total_non_saudi_employees += 1
+            if nationality == 'سعودي'
+              saudi_employees_count += 1
+            else
+              nationality_counts[nationality] ||= 0
+              nationality_counts[nationality] += 1
+              total_non_saudi_employees += 1
+            end
           end
-          # Add other processing based on your data structure
-        end
   
-        if nationality_counts.present?
-          result_hash = nationality_counts.map do |nationality, count|
-            percentage = ((count.to_f / total_non_saudi_employees) * 100).round(2)
-            "#{nationality}:#{count}:#{percentage}%"
-          end.join(',')
-  
-          report = NationalityReport.create(
-            result: result_hash,
-            name: name,
-            saudis: saudi_employees_count, # Store the count of Saudi employees
-            total_employees: total_non_saudi_employees # Total employees excluding Saudis
-          )
-  
-          max_addition = report.calculate_max_addition(nationality_counts)
-          report.update(max_addition: max_addition.to_json)
-  
-          redirect_to root_path, notice: 'Nationality report generated successfully!'
+          merged_counts.merge!(nationality_counts) { |_nationality, count1, count2| count1 + count2 }
         else
-          redirect_to root_path, alert: 'No data found in the Excel file.'
+          redirect_to root_path, alert: 'Header row or column not found in one of the Excel files.'
+          return
         end
+      end
+  
+      if merged_counts.present?
+        result_hash = merged_counts.map do |nationality, count|
+          percentage = ((count.to_f / total_non_saudi_employees) * 100).round(2)
+          "#{nationality}:#{count}:#{percentage}%"
+        end.join(',')
+  
+        report = NationalityReport.create(
+          result: result_hash,
+          name: file_names.to_json, # Storing the hash as JSON
+          saudis: saudi_employees_count,
+          total_employees: total_non_saudi_employees
+        )
+  
+        max_addition = report.calculate_max_addition(merged_counts)
+        report.update(max_addition: max_addition.to_json)
+  
+        redirect_to root_path, notice: 'Nationality report generated successfully!'
       else
-        redirect_to root_path, alert: 'Header row or column not found in the Excel file.'
+        redirect_to root_path, alert: 'No data found in the uploaded Excel files.'
       end
     else
-      redirect_to root_path, alert: 'Please upload a valid Excel file.'
+      redirect_to root_path, alert: 'Please upload valid Excel files.'
     end
   end
-
+  
 
   # GET /nationality_reports/new
   def new

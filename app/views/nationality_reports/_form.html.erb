@@ -1,4 +1,4 @@
-<%= form_with(url: generate_report_nationality_reports_path, method: :post, local: true, multipart: false) do |form| %>
+<%= form_with(url: generate_report_nationality_reports_path, method: :post, local: true, multipart: true) do |form| %>
   <% if nationality_report.errors.any? %>
     <div style="color: red">
       <h2><%= pluralize(nationality_report.errors.count, "error") %> prohibited this nationality_report from being saved:</h2>
@@ -12,11 +12,9 @@
   <% end %>
 
   <div>  
-  <%= form.file_field :file, accept: '.xlsx' %>
-  <%= form.submit "Generate Report" %>
-  </div>
-
-  <div>
-    <%= form.submit %>
+    <%= form.file_field :file1, accept: '.xlsx' %>
+    <%= form.file_field :file2, accept: '.xlsx' %>
+    <%= form.file_field :file3, accept: '.xlsx' %>
+    <%= form.submit "Generate Report" %>
   </div>
 <% end %>

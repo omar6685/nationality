@@ -1,4 +1,23 @@
-<%= @nationality_report.name %>
+<!-- nationality_reports/show.html.erb -->
+
+<h2>Uploaded Company Names</h2>
+<table>
+  <thead>
+    <tr>
+      <th>File Number</th>
+      <th>Company Name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @file_names.each do |file_number, company_name| %>
+      <tr>
+        <td><%= file_number %></td>
+        <td><%= company_name %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
 <br>
  اجمالي عدد السعوديين خارج الحسبة:<%= @nationality_report.saudis %>
 <!-- nationality_reports/show.html.erb -->
